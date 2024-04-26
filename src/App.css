@@ -4,3 +4,36 @@
 	padding: 2rem;
 	text-align: center;
 }
+
+.curr-equation-container {
+	display: flex;
+	flex-direction: row;
+	gap: 1rem;
+
+}
+
+.curr-equation-piece {
+	display: flex;
+	flex-direction: column;
+
+	.curr-equation-value {
+		height: 3rem;
+		width: 3rem;
+		font-size: 2rem;
+		text-align: center;
+	}
+
+	.curr-equation-buttons {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-evenly;
+
+		>button {
+			display: block;
+			height: 15px;
+			width: 15px;
+			font-size: 1rem;
+			padding: 0;
+		}
+	}
+}
