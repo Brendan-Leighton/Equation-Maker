@@ -37,3 +37,9 @@
 		}
 	}
 }
+
+.list-of-equations {
+	li {
+		list-style-type: none;
+	}
+}
