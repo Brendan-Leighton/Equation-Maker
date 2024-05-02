@@ -1,4 +1,6 @@
-import { isInteger } from "mathjs";
+/**
+ * Custome Types for Equations and it's parts.
+ */
 
 export const TYPES = {
 	OPERATOR: 'OPERATOR',
@@ -27,9 +29,9 @@ function validateOperator(value) {
 }
 
 function validateOperand(value) {
-	const isValid = (typeof (value) === 'number' || typeof (value) === "string" && value.trim() !== '') && !isNaN(value)
-	console.log('isValid: ', isValid);
 	console.log(`validateOperand(${value})`);
+	const isValid = (typeof (value) === 'number' || typeof (value) === "string" && value.trim() !== '') && !isNaN(value)
+	console.log(value + ' isValid: ', isValid);
 	return isValid;
 }
 
@@ -98,19 +100,39 @@ export class IEquation {
 		this.expressions = expressions;
 	}
 
-	addPart(part) {
-		this.parts.push(part)
-	}
-}
+	/**
+	 * Determines if this IEquation can be evaluated. Based on whether the Operands and Operators alternate appropriatly 
+	 * @returns {boolean} Whether this equation is runnable
+	 */
+	isRunnable() {
+		console.log('IEquation.isRunnable');
 
-export class IEquationPiece {
-	type;
-	value;
-	isEditable;
+		let prevType;
 
-	constructor(type, value, isEditable = true) {
-		this.type = type;
-		this.value = value;
-		this.isEditable = isEditable;
+		// loop EXPRESSIONS[]
+		for (let expressionIndex = 0; expressionIndex < this.expressions.length; expressionIndex++) {
+
+			const item = this.expressions[expressionIndex];
+
+			// if EXPRESSION{} else OPERATOR{}
+			if (item.type === TYPES.EXPRESSION) {
+				// loop PARTS[] of an EXPRESSION{}
+				for (let partIndex = 0; partIndex < item.parts.length; partIndex++) {
+					const part = item.parts[partIndex];
+
+					// compare vs prevValue
+					if (part.type === prevType) return false;
+					prevType = part.type;
+				}
+			}
+			// else OPERATOR{}
+			else {
+				// compare vs prevValue
+				if (prevType === TYPES.OPERATOR) return false;
+				prevType = TYPES.OPERATOR;
+			}
+		}
+
+		return true;
 	}
 }

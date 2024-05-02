@@ -1,16 +1,24 @@
 import React, { useState } from 'react'
 import { evaluate } from 'mathjs'
 import styles from './Equation.module.css'
-import { Expression, Operand, Operator, TYPES, validateNewValue } from './interfaces/IEquation'
+import { IEquation, Expression, Operand, Operator, TYPES, validateNewValue } from './interfaces/IEquation'
 
+/**
+ * 
+ * @param {*} props 
+ * @returns 
+ */
 export default function Equation(props) {
 
 	//
 	// STATE
 	//
 
-	/** The equation this component is rendering */
-	const [equation, setEquation] = useState(props.equation)
+	const [
+		/** @type {IEquation} equation */
+		equation,
+		setEquation
+	] = useState(props.equation)
 	/** Tracks whether we display editing controls or not */
 	const [isEditMode, setIsEditMode] = useState(false);
 
@@ -29,6 +37,26 @@ export default function Equation(props) {
 		setEquation(updatedEquation);
 	}
 
+	/**
+	 * 
+	 * @param {Operand | Operator} newPart New part to apend to the end of the expression
+	 */
+	function addToEquation(newPart) {
+		console.log(`addToEquation(${JSON.stringify(newPart)})`);
+		const updatedEquation = equation;
+		// add operand to end of last expression
+		if (newPart.type === TYPES.OPERAND) {
+			console.log('TYPE === OPERAND');
+			updatedEquation.expressions[updatedEquation.expressions.length - 1].parts.push(newPart);
+		}
+		// add operator to end of equation, outside of last expression
+		else {
+			console.log('TYPE === OPERATOR');
+			updatedEquation.expressions.push(newPart)
+		}
+		setEquation(new IEquation(updatedEquation.expressions));
+	}
+
 	// 
 	// "HANDLE" FUNCTIONS - functions that handle onClick, onChange, etc
 	//
@@ -40,13 +68,18 @@ export default function Equation(props) {
 
 	/**
 	 * Handles the onClick for the 'RUN' button
-	 * @param {Equation} equation equation to run
+	 * @param {IEquation} equation equation to run
 	 */
 	function handleRunEquation(equation) {
+		const isRunnable = equation.isRunnable();
+		console.log('isRunnable? ', isRunnable);
+		if (!isRunnable) {
+			window.alert("Equation isn't runnable")
+			return;
+		}
 		let eqStr = ''
 
 		equation.expressions.forEach(item => {
-
 			if (item.type === TYPES.OPERATOR) {
 				eqStr += item.value;
 			}
@@ -55,7 +88,6 @@ export default function Equation(props) {
 					eqStr += part.value
 				})
 			}
-
 		})
 
 		console.log(`expression: ${eqStr} = ${evaluate(eqStr)}`);
@@ -91,7 +123,7 @@ export default function Equation(props) {
 	 * Handles adding a new Operand opbject to the Equation
 	 */
 	function handleAddNumber() {
-		console.log('adding number');
+		addToEquation(new Operand(0, 'name'))
 	}
 
 	// 
