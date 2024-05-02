@@ -4,13 +4,14 @@ import Equation from './Equation'
 
 export default function EquationList({ equations }) {
 	return (
-		<ul>
+		<ul className='list-of-equations'>
 			{
-				equations.map((eq, index) => {
+				equations.map((equation, index) => {
 					return (
 						<li key={index}>
 							<Equation
-								equation={eq}
+								equation={equation}
+								nthEquation={index}
 							/>
 						</li>
 					)

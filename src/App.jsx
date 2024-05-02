@@ -5,24 +5,23 @@ import './App.css'
 // COMPONENTS
 import Equation from './components/Equation/Equation'
 import EquationList from './components/Equation/EquationList';
-import EquationEditing from './components/Equation/EquationEditing';
 // INTERFACES
 import { TYPES, IEquation, IEquationPiece, Operator, Operand, Expression } from './components/Equation/interfaces/IEquation';
 // TESTING
 import TestData from './data/TestData';
 
 function App() {
-	/**
-	 * Holds the equation in an array [num, operator, num, operator, etc.]
-	 */
-	const [currEquation, setCurrEquation] = useState(TestData[0]);
 
+	//
+	// STATE
+	//
 
-	/**
-	 * Holds all equations that have been created
-	 */
+	/** Holds all equations that have been created */
 	const [equations, setEquations] = useState(TestData)
 
+	/**
+	 * Handles adding a new Equation object to the equations state
+	 */
 	const handleAddNewEquation = () => {
 		console.log('handleAddNewEquation() -> fired');
 		const num1 = document.getElementById('num1').value;
@@ -33,20 +32,12 @@ function App() {
 		setEquations(e => [...e, new IEquation([num1, '+', num2])])
 	}
 
+	/** App.jsx's return statement */
 	return (
 		<>
-			<ul className='list-of-equations'>
-				{
-					equations.map((equation, index) => {
-						return (
-							<Equation
-								equation={equation}
-								nthEquation={index}
-							/>
-						)
-					})
-				}
-			</ul>
+			<EquationList
+				equations={equations}
+			/>
 		</>
 	)
 }
