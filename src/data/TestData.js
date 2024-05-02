@@ -1,4 +1,4 @@
-import { TYPES, IEquation, IEquationPiece, Expression, Operand, Operator } from '../components/Equation/interfaces/IEquation';
+import { IEquation, Expression, Operand, Operator } from '../components/Equation/interfaces/IEquation';
 
 const TestData = [
 	new IEquation([
