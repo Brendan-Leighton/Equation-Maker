@@ -28,7 +28,7 @@ function validateOperator(value) {
 
 function validateOperand(value) {
 	const isValid = (typeof (value) === 'number' || typeof (value) === "string" && value.trim() !== '') && !isNaN(value)
-	console.log('isValid: ',);
+	console.log('isValid: ', isValid);
 	console.log(`validateOperand(${value})`);
 	return isValid;
 }
