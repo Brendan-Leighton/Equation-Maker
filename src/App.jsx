@@ -3,10 +3,9 @@ import { useState } from 'react'
 // STYLES
 import './App.css'
 // COMPONENTS
-import Equation from './components/Equation/Equation'
 import EquationList from './components/Equation/EquationList';
 // INTERFACES
-import { TYPES, IEquation, IEquationPiece, Operator, Operand, Expression } from './components/Equation/interfaces/IEquation';
+import { IEquation } from './components/Equation/interfaces/IEquation';
 // TESTING
 import TestData from './data/TestData';
 
