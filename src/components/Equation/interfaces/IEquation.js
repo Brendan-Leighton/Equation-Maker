@@ -1,3 +1,6 @@
+
+import { evaluate } from 'mathjs'
+
 /**
  * Custome Types for Equations and it's parts.
  */
@@ -7,10 +10,8 @@ export const TYPES = {
 	OPERAND: 'OPERAND',
 	VARIABLE: 'VARIABLE',
 	EXPRESSION: 'EXPRESSION',
-	PARENTHESIS: {
-		OPEN: 'OPEN',
-		CLOSED: 'CLOSED'
-	}
+	PARENTHESIS_OPEN: 'PAREN_OPEN',
+	PARENTHESIS_CLOSED: 'PAREN_CLOSED'
 }
 
 export function validateNewValue(partType, newValue) {
@@ -29,47 +30,87 @@ function validateOperator(value) {
 }
 
 function validateOperand(value) {
-	console.log(`validateOperand(${value})`);
+	// console.log(`validateOperand(${value})`);
 	const isValid = (typeof (value) === 'number' || typeof (value) === "string" && value.trim() !== '') && !isNaN(value)
-	console.log(value + ' isValid: ', isValid);
+	// console.log(value + ' isValid: ', isValid);
 	return isValid;
 }
 
-export class Operator {
-	type = TYPES.OPERATOR;
-	value; // + - * /
-	name = '';
+function validateVariable(value) {
+	return validateOperand(value);
+}
 
-	constructor(value = '+') {
-		const isValidValue = this.validate(value);
-		if (isValidValue) {
-			this.value = value;
-		}
-		return isValidValue;
+function generateId(part1, part2, part3) {
+	return `${part1}_${part2}_${part3}_${Date.now()}`
+}
+
+export class Piece {
+	id;
+	type;
+	name;
+	value;
+
+	constructor(type, value = '', name = '') {
+		this.id = generateId(type, name, value);
+		this.type = type;
+		this.name = name;
+		this.setValue(value);
 	}
 
-	validate(value) {
-		return validateOperator(value);
+	setValue(newValue) {
+		// BASE CASE - we don't set the following values so return immediately.
+		// if (this.type === TYPES.PARENTHESIS_CLOSED || this.type === TYPES.PARENTHESIS_OPEN) return false;
+
+		// set value if valid value/type combo
+		if (this.isValidValue(newValue)) {
+			this.value = newValue;
+			return true
+		}
+		// return false if invalid value/type combo
+		else return false;
+	}
+
+	isValidValue(value) {
+		if (value === '') return true
+
+		switch (this.type) {
+			case TYPES.OPERATOR:
+				return validateOperator(value);
+			case TYPES.OPERAND:
+				return validateOperand(value);
+			case TYPES.VARIABLE:
+				return validateVariable(value);
+			case TYPES.PARENTHESIS_OPEN:
+				return (value === '(')
+			case TYPES.PARENTHESIS_CLOSED:
+				return (value === ')')
+			default:
+				return false;
+		}
 	}
 }
 
-export class Operand {
-	type = TYPES.OPERAND;
-	value; // number
-	name; // string
-
-	constructor(value, name = '') {
-		const isValidValue = this.validate(value)
-		if (isValidValue) {
-			this.value = value;
-			this.name = name;
+export class Operator extends Piece {
+	constructor(value = '+') {
+		if (validateOperator(value)) {
+			super(TYPES.OPERATOR, value)
 		}
-
-		return isValidValue;
 	}
+}
 
-	validate(value) {
-		return validateOperand(value);
+export class Operand extends Piece {
+	constructor(value, name = '') {
+		if (validateOperand(value)) {
+			super(TYPES.OPERAND, value, name)
+		}
+	}
+}
+
+export class Variable extends Piece {
+	constructor(value = 0, name = 'variable') {
+		if (validateOperand(value)) {
+			super(TYPES.VARIABLE, value, name)
+		}
 	}
 
 	updateValue(value) {
@@ -79,60 +120,45 @@ export class Operand {
 	}
 }
 
-export class Expression {
-	type = TYPES.EXPRESSION;
-	name; // string
-	parts; // Operand/Operator[]
-	hasParenthesis;
-
-	constructor(name, parts, hasParenthesis = false) {
-		this.name = name;
-		this.parts = parts;
-		this.hasParenthesis = hasParenthesis;
+export class Parenthesis extends Piece {
+	constructor(isOpen) {
+		const parenType = isOpen ? TYPES.PARENTHESIS_OPEN : TYPES.PARENTHESIS_CLOSED;
+		const parenValue = isOpen ? '(' : ')';
+		// const [parenType, parenValue] = isOpen ? [TYPES.PARENTHESIS_OPEN, '('] : [TYPES.PARENTHESIS_CLOSED, ')'];
+		super(parenType, parenValue)
 	}
 }
 
 export class IEquation {
-	name = ''; // string
-	expressions = []; // Expression[]
+	type = TYPES.EXPRESSION;
+	name; // string
+	pieces; // Piece[]
 
-	constructor(expressions) {
-		this.expressions = expressions;
+	constructor(pieces = [], name = '') {
+		this.name = name;
+		this.pieces = pieces;
 	}
 
 	/**
-	 * Determines if this IEquation can be evaluated. Based on whether the Operands and Operators alternate appropriatly 
-	 * @returns {boolean} Whether this equation is runnable
+	 * Determines if this IEquation can be solved, and solves it.
+	 * @param {string} eqStr the string representation of an equation
+	 * @returns {[boolean, string]} Whether this equation is runnable
 	 */
-	isRunnable() {
-		console.log('IEquation.isRunnable');
+	isSolvable() {
+		let result = [false, ''];
 
-		let prevType;
+		let eqStr = ''
+		this.pieces.forEach(piece => {
+			eqStr += piece.value;
+		})
 
-		// loop EXPRESSIONS[]
-		for (let expressionIndex = 0; expressionIndex < this.expressions.length; expressionIndex++) {
-
-			const item = this.expressions[expressionIndex];
-
-			// if EXPRESSION{} else OPERATOR{}
-			if (item.type === TYPES.EXPRESSION) {
-				// loop PARTS[] of an EXPRESSION{}
-				for (let partIndex = 0; partIndex < item.parts.length; partIndex++) {
-					const part = item.parts[partIndex];
-
-					// compare vs prevValue
-					if (part.type === prevType) return false;
-					prevType = part.type;
-				}
-			}
-			// else OPERATOR{}
-			else {
-				// compare vs prevValue
-				if (prevType === TYPES.OPERATOR) return false;
-				prevType = TYPES.OPERATOR;
-			}
+		try {
+			result = evaluate(eqStr)
+			console.log(`expression: ${eqStr} = ${result}`);
+			return result;
+		} catch (error) {
+			console.log(`Couldn't run expression: ${eqStr}`);
+			return result
 		}
-
-		return true;
 	}
 }

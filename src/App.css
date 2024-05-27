@@ -43,3 +43,63 @@
 		list-style-type: none;
 	}
 }
+
+.drag-drop-area {
+	--height: 50px;
+	display: flex;
+	gap: 0.1rem;
+
+	/* height: var(--height); */
+}
+
+.drop-location::before {
+	content: '';
+	display: block;
+	background-color: pink;
+	outline: red solid 2px;
+}
+
+.droppable {
+	list-style-type: none;
+
+	display: inline-flex;
+	flex-direction: row;
+	gap: 2rem;
+	justify-content: space-around;
+
+	height: fill;
+	min-width: 500px;
+	padding: 0 2rem;
+
+	color: black;
+	background-color: aqua;
+	border: 1px solid black;
+}
+
+.draggable {
+
+	height: fit-content;
+	min-width: 50px;
+	/* min-height: var(--height);
+	width: 50px; */
+	/* width: fit-content; */
+
+	background-color: coral;
+	border-radius: 5px;
+}
+
+.display-pieces {
+	display: flex;
+	flex-direction: row;
+}
+
+.equation-piece {
+
+	.equation-piece-name {
+		font-size: 0.75rem;
+	}
+
+	.equation-piece-value {
+		font-size: 1.5rem;
+	}
+}

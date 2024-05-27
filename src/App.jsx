@@ -3,11 +3,12 @@ import { useState } from 'react'
 // STYLES
 import './App.css'
 // COMPONENTS
-import EquationList from './components/Equation/EquationList';
+import DragDrop from './components/DragDrop/DragDrop';
 // INTERFACES
 import { IEquation } from './components/Equation/interfaces/IEquation';
 // TESTING
 import TestData from './data/TestData';
+import Equation from './components/Equation/Equation';
 
 function App() {
 
@@ -31,12 +32,46 @@ function App() {
 		setEquations(e => [...e, new IEquation([num1, '+', num2])])
 	}
 
+	function handleDragStart(event) {
+		event.dataTransfer.clearData();
+		event.dataTransfer.setData('text', event.target.id)
+	}
+
+	function handleDragOver(event) {
+		event.preventDefault();
+
+	}
+
+	function handleDrop(event) {
+		event.preventDefault();
+		if (!event.target.droppable) return
+		const data = event.dataTransfer.getData('text');
+		event.target.appendChild(document.getElementById(data))
+	}
+
+	console.log('TestData: ', TestData);
+	console.log('equations: ', equations);
+
 	/** App.jsx's return statement */
 	return (
 		<>
-			<EquationList
+			{
+				equations.map((eq, index) => {
+					return (
+						<div key={index}>
+							<hr />
+							<Equation
+								id={index}
+								equation={eq}
+							/>
+						</div>
+					)
+				})
+			}
+
+			{/* <EquationList
 				equations={equations}
-			/>
+			/> */}
 		</>
 	)
 }

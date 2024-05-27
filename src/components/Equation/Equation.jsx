@@ -1,12 +1,16 @@
 import React, { useState } from 'react'
 import { evaluate } from 'mathjs'
 import styles from './Equation.module.css'
-import { IEquation, Expression, Operand, Operator, TYPES, validateNewValue } from './interfaces/IEquation'
+import { IEquation, Operand, Operator, TYPES, validateNewValue } from './interfaces/IEquation'
+// import Droppable from '../DragDrop/Droppable';
+// import Draggable from '../DragDrop/Draggable';
+import DragDrop from '../DragDrop/DragDrop'
+import { useEffect } from 'react'
 
 /**
- * 
- * @param {*} props 
- * @returns 
+ *
+ * @param {*} props
+ * @returns
  */
 export default function Equation(props) {
 
@@ -18,9 +22,13 @@ export default function Equation(props) {
 		/** @type {IEquation} equation */
 		equation,
 		setEquation
-	] = useState(props.equation)
+	] = useState(new IEquation)
 	/** Tracks whether we display editing controls or not */
 	const [isEditMode, setIsEditMode] = useState(false);
+
+	useEffect(() => {
+		setEquation(props.equation)
+	}, [props.equation])
 
 	//
 	// STATE FUNCTIONS - functions for more involved state handling
@@ -31,14 +39,31 @@ export default function Equation(props) {
 	 * @param {number} expressionPartIndex Index of the part in expression.parts[index]
 	 * @param {number | string} newValue new value for an Operand (number) or Operator (string)
 	 */
-	function updateExpression(expressionIndex, expressionPartIndex, newValue) {
-		const updatedEquation = equation;
-		updatedEquation.expressions[expressionIndex].parts[expressionPartIndex].value = newValue;
-		setEquation(updatedEquation);
+	function updateExpression(oldIndex, newIndex) {
+		if (oldIndex === undefined || newIndex === undefined) return;
+
+		console.log('equation BEFORE: ', equation);
+		let updatedEquation = equation;
+		const movingObject = updatedEquation.pieces.slice(oldIndex, oldIndex + 1)[0]
+		updatedEquation.pieces = updatedEquation.pieces.toSpliced(oldIndex, 1);
+		updatedEquation.pieces.splice(newIndex, 0, movingObject)
+
+		console.log('updatedEquation.pieces: ', updatedEquation.pieces);
+
+		// CODE FOR SWAPPING - future functionality
+
+		// const newIndexObject = updatedEquation.pieces[newIndex];
+		// updatedEquation.pieces[newIndex] = updatedEquation.pieces[oldIndex];
+		// updatedEquation.pieces[oldIndex] = newIndexObject;
+
+		// [updatedEquation[oldIndex], updatedEquation[newIndex]] = [updatedEquation[newIndex], updatedEquation[oldIndex]]
+		setEquation(new IEquation(updatedEquation.pieces));
+		console.log('equation AFTER: ', equation);
+		console.log('updatedEquation: ', updatedEquation);
 	}
 
 	/**
-	 * 
+	 *
 	 * @param {Operand | Operator} newPart New part to apend to the end of the expression
 	 */
 	function addToEquation(newPart) {
@@ -57,7 +82,7 @@ export default function Equation(props) {
 		setEquation(new IEquation(updatedEquation.expressions));
 	}
 
-	// 
+	//
 	// "HANDLE" FUNCTIONS - functions that handle onClick, onChange, etc
 	//
 
@@ -71,31 +96,16 @@ export default function Equation(props) {
 	 * @param {IEquation} equation equation to run
 	 */
 	function handleRunEquation(equation) {
-		const isRunnable = equation.isRunnable();
-		console.log('isRunnable? ', isRunnable);
-		if (!isRunnable) {
-			window.alert("Equation isn't runnable")
-			return;
-		}
-		let eqStr = ''
 
-		equation.expressions.forEach(item => {
-			if (item.type === TYPES.OPERATOR) {
-				eqStr += item.value;
-			}
-			else {
-				item.parts.forEach(part => {
-					eqStr += part.value
-				})
-			}
-		})
+		const [isSolvable, solution] = equation.isSolvable();
 
-		console.log(`expression: ${eqStr} = ${evaluate(eqStr)}`);
+		console.log(`isSolvable: ${isSolvable}\nsolution: ${solution}`);
+
 	}
 
 	/**
 	 * Handles the change of an Operand via an onChange()
-	 * @param {Operand} part 
+	 * @param {Operand} part
 	 * @param {number} expressionIndex Index for the expression that's in the equation rendered by this component
 	 * @param {number} expressionPartIndex Index for the part inside the expression mentioned in expressionIndex
 	 * @param {Event} e Event passed from the onChange
@@ -126,13 +136,13 @@ export default function Equation(props) {
 		addToEquation(new Operand(0, 'name'))
 	}
 
-	// 
+	//
 	// "RENDER" FUNCTIONS - functions that return HTML
 	//
 
 	/**
 	 * Renders an Operator or Operand in Edit mode
-	 * @param {Operator | Operand} part 
+	 * @param {Operator | Operand} part
 	 * @param {number} expressionIndex Index of the expression in the equation.expressions[index]
 	 * @param {number} expressionPartIndex Index of the part in expression.parts[index]
 	 * @returns {React.JSX.Element} Component for editing the respective data
@@ -178,33 +188,26 @@ export default function Equation(props) {
 	 * @param {Operand | Operator} part Part to render
 	 * @returns {React.JSX.Element} HTML for viewing the part
 	 */
-	function renderPart_display(part) {
+	function renderPiecesForDisplay(equation) {
 		return (
-			<>
-				<div className={styles.name}>{part.name}</div>
-				<div className={styles.value}>{part.value}</div>
-			</>
-		)
-	}
-
-	/**
-	 * Renders an Operand or Operator in display mode or edit mode, depending on state variable 'isEditMode'
-	 * @param {Operand | Operator} part Part to render markup for
-	 * @param {number} expressionIndex Index of the expression in the equation.expressions[index]
-	 * @param {number} expressionPartIndex Index of the part in expression.parts[index]
-	 * @returns {React.JSX.Element} HTML for displaying or editing
-	 */
-	function renderPart(part, expressionIndex, expressionPartIndex) {
-		return (
-			<div className={styles.part_container} key={expressionPartIndex}>
-				{isEditMode ? renderPart_edit(part, expressionIndex, expressionPartIndex) : renderPart_display(part)}
+			<div className='display-pieces' id={'pieces_' + equation.name} key={'display_pieces_' + equation.name}>
+				{
+					equation.pieces.map((piece, index) => {
+						return (
+							<div className='piece' key={`pieces_${equation.name}_piece_${index}`}>
+								<div className={styles.name}>{piece.name}</div>
+								<div className={styles.value}>{piece.value}</div>
+							</div>
+						)
+					})
+				}
 			</div>
 		)
 	}
 
 	/**
 	 * Renders HTML controls for editing the current Equation
-	 * @returns {React.JSX.Element} 
+	 * @returns {React.JSX.Element}
 	 */
 	function renderEditControls() {
 		return (
@@ -216,49 +219,55 @@ export default function Equation(props) {
 		)
 	}
 
-	/**
-	 * Renders a given expression. 
-	 * @param {Expression} expression Expression to render 
-	 * @param {number} expressionIndex Index of the expression in the equation.expressions[index]
-	 * @returns {React.JSX.Element}
-	 */
-	function renderExpression(expression, expressionIndex) {
-		// loop the parts of the expression
-		return (
-			expression.parts.map((part, expressionPartIndex) => {
-				return (
-					<div key={expressionPartIndex}>
-						{
-							renderPart(part, expressionIndex, expressionPartIndex)
-						}
-					</div>
-				)
-			})
-		)
+	function renderablePieces() {
+		const components = [];
+
+		equation.pieces.forEach((p, index) => {
+			components.push(
+				<div className='equation-piece' data-piece-index={index}>
+					<div className='equation-piece-value'>{p.value}</div>
+					<div className='equation-piece-name'>{p.name === '' ? " " : p.name}</div>
+				</div>
+			)
+		})
+
+		return components;
 	}
 
 	/** Equation.jsx's return-statement */
 	return (
-		<>
-			{isEditMode && renderEditControls()}
+		<div key={'eq_' + props.id} className={styles.main}>
 
-			<div className={styles.equation_container}>
-				{
-					// loop expressions/operators in the equation
-					equation.expressions.map((item, expressionIndex) => {
-						console.log(`Mapping Expressions in Equation\n\texpressionIndex: ${expressionIndex}\n\titem: ${JSON.stringify(item)}`);
+			{/* NON-EDIT DISPLAY */
+				// !isEditMode &&
+				renderPiecesForDisplay(equation)
+			}
 
-						return item.type === TYPES.OPERATOR ?
-							renderPart(item, expressionIndex, expressionIndex) :
-							renderExpression(item, expressionIndex)
-					})
+			<div className={styles.controls}>
+				{/* EQUATION CONTROLS */}
+				<div className={styles.main_buttons_container}>
+					<button onClick={handleToggleEditMode}>{isEditMode ? 'DONE' : 'EDIT'}</button>
+					<button onClick={() => handleRunEquation(equation)}>RUN</button>
+				</div>
+
+				{/* EDIT CONTROLS */
+					isEditMode &&
+					<div className={styles.add_buttons_container}>
+						<h2>Add:</h2>
+						<button onClick={handleAddNumber}>Number</button>
+						<button>Operator</button>
+					</div>
 				}
 			</div>
 
-			<div className={styles.main_buttons_container}>
-				<button onClick={handleToggleEditMode}>{isEditMode ? 'DONE' : 'EDIT'}</button>
-				<button onClick={() => handleRunEquation(equation)}>RUN</button>
-			</div>
-		</>
+			{/* EDIT DISPLAY */
+				isEditMode &&
+				<DragDrop
+					id={props.id}
+					draggableContent={renderablePieces}
+					onDrop={updateExpression}
+				/>
+			}
+		</div>
 	)
 }
