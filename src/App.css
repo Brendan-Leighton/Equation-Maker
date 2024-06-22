@@ -1,105 +1,100 @@
 #root {
-	max-width: 1280px;
-	margin: 0 auto;
-	padding: 2rem;
-	text-align: center;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.no-scroll {
+    overflow: hidden;
 }
 
 .curr-equation-container {
-	display: flex;
-	flex-direction: row;
-	gap: 1rem;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
 
 }
 
 .curr-equation-piece {
-	display: flex;
-	flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-	.curr-equation-value {
-		height: 3rem;
-		width: 3rem;
-		font-size: 2rem;
-		text-align: center;
-	}
+    .curr-equation-value {
+        height: 3rem;
+        width: 3rem;
+        font-size: 2rem;
+        text-align: center;
+    }
 
-	.curr-equation-buttons {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-evenly;
+    .curr-equation-buttons {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
 
-		>button {
-			display: block;
-			height: 15px;
-			width: 15px;
-			font-size: 1rem;
-			padding: 0;
-		}
-	}
+        >button {
+            display: block;
+            height: 15px;
+            width: 15px;
+            font-size: 1rem;
+            padding: 0;
+        }
+    }
 }
 
 .list-of-equations {
-	li {
-		list-style-type: none;
-	}
+    li {
+        list-style-type: none;
+    }
 }
 
 .drag-drop-area {
-	--height: 50px;
-	display: flex;
-	gap: 0.1rem;
+    --height: 50px;
+    display: flex;
+    gap: 0.1rem;
 
-	/* height: var(--height); */
+    /* height: var(--height); */
 }
 
 .drop-location::before {
-	content: '';
-	display: block;
-	background-color: pink;
-	outline: red solid 2px;
+    content: '';
+    display: block;
+    background-color: pink;
+    outline: red solid 2px;
 }
 
 .droppable {
-	list-style-type: none;
+    list-style-type: none;
 
-	display: inline-flex;
-	flex-direction: row;
-	gap: 2rem;
-	justify-content: space-around;
+    display: inline-flex;
+    flex-direction: row;
+    gap: 1px;
+    justify-content: center;
 
-	height: fill;
-	min-width: 500px;
-	padding: 0 2rem;
+    min-height: 100px;
+    min-width: 500px;
+    padding: 0;
 
-	color: black;
-	background-color: aqua;
-	border: 1px solid black;
+    color: black;
+    background-color: aqua;
+    border: 1px solid black;
 }
 
 .draggable {
 
-	height: fit-content;
-	min-width: 50px;
-	/* min-height: var(--height);
+    height: 100%;
+    min-width: 50px;
+    /* min-height: var(--height);
 	width: 50px; */
-	/* width: fit-content; */
+    /* width: fit-content; */
 
-	background-color: coral;
-	border-radius: 5px;
+    background-color: coral;
+    border-radius: 5px;
 }
 
 .display-pieces {
-	display: flex;
-	flex-direction: row;
-}
-
-.equation-piece {
-
-	.equation-piece-name {
-		font-size: 0.75rem;
-	}
-
-	.equation-piece-value {
-		font-size: 1.5rem;
-	}
+    display: flex;
+    flex-direction: row;
 }

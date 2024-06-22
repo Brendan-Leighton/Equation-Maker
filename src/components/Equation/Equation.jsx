@@ -1,11 +1,14 @@
-import React, { useState } from 'react'
-import { evaluate } from 'mathjs'
+// REACT
+import React, { useState, useEffect } from 'react'
+// REACT ICONS
+import { IconContext } from 'react-icons'
+import { FaSave, FaRunning, FaArrowLeft } from "react-icons/fa"
+import { MdEdit } from "react-icons/md"
+// STYLESHEETS
 import styles from './Equation.module.css'
-import { IEquation, Operand, Operator, TYPES, validateNewValue } from './interfaces/IEquation'
-// import Droppable from '../DragDrop/Droppable';
-// import Draggable from '../DragDrop/Draggable';
-import DragDrop from '../DragDrop/DragDrop'
-import { useEffect } from 'react'
+// PROJECT'S
+import { Constant, IEquation, Operator, TYPES, Variable } from './interfaces/IEquation'
+import { EditableEquation } from './components/EditableEquation'
 
 /**
  *
@@ -14,260 +17,387 @@ import { useEffect } from 'react'
  */
 export default function Equation(props) {
 
-	//
-	// STATE
-	//
+    //
+    // STATE
+    //
 
-	const [
-		/** @type {IEquation} equation */
-		equation,
-		setEquation
-	] = useState(new IEquation)
-	/** Tracks whether we display editing controls or not */
-	const [isEditMode, setIsEditMode] = useState(false);
+    const [
+        /** @type {IEquation} equation */
+        equation,
+        setEquation
+    ] = useState(new IEquation)
+    /** Tracks whether we display editing controls or not */
+    const [isEditMode, setIsEditMode] = useState(false);
+    /** Whether to display the RUN-modal */
+    const [isRunMode, setIsRunMode] = useState(false)
+    /** Holds the solution after solving it */
+    const [solution, setSolution] = useState('solution goes here')
+    /** Holds the variable's values, if this equation has any pieces of TYPES.VARIABLES */
+    const [variableValues, setVariableValues] = useState({})
 
-	useEffect(() => {
-		setEquation(props.equation)
-	}, [props.equation])
+    /** Title/Name of this equation */
+    const [equationTitle, setEquationTitle] = useState('')
 
-	//
-	// STATE FUNCTIONS - functions for more involved state handling
-	//
+    // EDIT MODE STATE
+    const [addPieceType, setAddPieceType] = useState(TYPES.CONSTANT)
+    const [newPieceName, setNewPieceName] = useState('')
+    const [newPieceValue, setNewPieceValue] = useState('')
 
-	/**
-	 * @param {number} expressionIndex Index of the expression in the equation.expressions[index]
-	 * @param {number} expressionPartIndex Index of the part in expression.parts[index]
-	 * @param {number | string} newValue new value for an Operand (number) or Operator (string)
-	 */
-	function updateExpression(oldIndex, newIndex) {
-		if (oldIndex === undefined || newIndex === undefined) return;
+    /**
+     * Set States
+     */
+    useEffect(() => {
+        setEquation(props.equation)
+        setEquationTitle(props.equation.name)
+    }, [props.equation])
 
-		console.log('equation BEFORE: ', equation);
-		let updatedEquation = equation;
-		const movingObject = updatedEquation.pieces.slice(oldIndex, oldIndex + 1)[0]
-		updatedEquation.pieces = updatedEquation.pieces.toSpliced(oldIndex, 1);
-		updatedEquation.pieces.splice(newIndex, 0, movingObject)
+    /**
+     * Stop scroll on <body/> when an equation is in edit-mode
+     */
+    useEffect(() => {
+        const bodyEl = document.getElementsByTagName('body')[0];
+        if (bodyEl !== undefined || bodyEl !== null) {
+            isEditMode && bodyEl.classList.add('no-scroll')
+            !isEditMode && bodyEl.classList.remove('no-scroll')
+        }
+    }, [isEditMode])
 
-		console.log('updatedEquation.pieces: ', updatedEquation.pieces);
+    //
+    // STATE FUNCTIONS - functions for more involved state handling
+    //
 
-		// CODE FOR SWAPPING - future functionality
+    /**
+     * @param {number} expressionIndex Index of the expression in the equation.expressions[index]
+     * @param {number} expressionPartIndex Index of the part in expression.parts[index]
+     * @param {number | string} newValue new value for an Operand (number) or Operator (string)
+     */
+    function updateExpression(oldIndex, newIndex) {
+        if (oldIndex === undefined || newIndex === undefined) return;
 
-		// const newIndexObject = updatedEquation.pieces[newIndex];
-		// updatedEquation.pieces[newIndex] = updatedEquation.pieces[oldIndex];
-		// updatedEquation.pieces[oldIndex] = newIndexObject;
+        // console.log('equation BEFORE: ', equation);
+        let updatedEquation = equation;
+        const movingObject = updatedEquation.pieces.slice(oldIndex, oldIndex + 1)[0]
+        updatedEquation.pieces = updatedEquation.pieces.toSpliced(oldIndex, 1);
+        updatedEquation.pieces.splice(newIndex, 0, movingObject)
 
-		// [updatedEquation[oldIndex], updatedEquation[newIndex]] = [updatedEquation[newIndex], updatedEquation[oldIndex]]
-		setEquation(new IEquation(updatedEquation.pieces));
-		console.log('equation AFTER: ', equation);
-		console.log('updatedEquation: ', updatedEquation);
-	}
+        // CODE FOR SWAPPING - future functionality
+        // [updatedEquation[oldIndex], updatedEquation[newIndex]] = [updatedEquation[newIndex], updatedEquation[oldIndex]]
 
-	/**
-	 *
-	 * @param {Operand | Operator} newPart New part to apend to the end of the expression
-	 */
-	function addToEquation(newPart) {
-		console.log(`addToEquation(${JSON.stringify(newPart)})`);
-		const updatedEquation = equation;
-		// add operand to end of last expression
-		if (newPart.type === TYPES.OPERAND) {
-			console.log('TYPE === OPERAND');
-			updatedEquation.expressions[updatedEquation.expressions.length - 1].parts.push(newPart);
-		}
-		// add operator to end of equation, outside of last expression
-		else {
-			console.log('TYPE === OPERATOR');
-			updatedEquation.expressions.push(newPart)
-		}
-		setEquation(new IEquation(updatedEquation.expressions));
-	}
+        setEquation(new IEquation(updatedEquation.pieces));
+    }
 
-	//
-	// "HANDLE" FUNCTIONS - functions that handle onClick, onChange, etc
-	//
+    //
+    // "HANDLE" FUNCTIONS - functions that handle onClick, onChange, etc
+    //
 
-	/** Handles toggling edit mode. Keeping this for possible future development. */
-	function handleToggleEditMode() {
-		setIsEditMode(!isEditMode)
-	}
+    /** Handles toggling edit mode. Keeping this for possible future development. */
+    function handleClick_toggleEditMode() {
+        setIsEditMode(!isEditMode)
+    }
 
-	/**
-	 * Handles the onClick for the 'RUN' button
-	 * @param {IEquation} equation equation to run
-	 */
-	function handleRunEquation(equation) {
+    /**
+     * Handles the onClick for the 'RUN' button
+     * @param {IEquation} equation equation to run
+     */
+    function handleClick_runEquation() {
+        setIsRunMode(true)
+    }
 
-		const [isSolvable, solution] = equation.isSolvable();
 
-		console.log(`isSolvable: ${isSolvable}\nsolution: ${solution}`);
+    /**
+     * Handles the onClick for the 'SOLVE' button in the RUN-modal
+     * @param {IEquation} equation equation to run
+     */
+    function handleClick_solveEquation() {
+        const eqToSolve = equation
+        eqToSolve.pieces.forEach(piece => {
+            if (variableValues[piece.id]) {
+                piece.value = variableValues[piece.id]
+            }
+        })
+        runEquation(eqToSolve)
+    }
 
-	}
+    function runEquation(equation) {
+        const [isSolvable, newSolution] = equation.isSolvable();
+        console.log(`isSolvable: ${isSolvable}, newSolution: ${newSolution}`);
+        setSolution(newSolution)
+    }
 
-	/**
-	 * Handles the change of an Operand via an onChange()
-	 * @param {Operand} part
-	 * @param {number} expressionIndex Index for the expression that's in the equation rendered by this component
-	 * @param {number} expressionPartIndex Index for the part inside the expression mentioned in expressionIndex
-	 * @param {Event} e Event passed from the onChange
-	 */
-	function handleOperandChange(part, expressionIndex, expressionPartIndex, e) {
-		const isValid = validateNewValue(part.type, e.target.value);
-		console.log(`handleOperandChange(\n\tpart: ${JSON.stringify(part)}, \n\tkey: ${expressionPartIndex}, \n\te.value: ${e.target.value})\n\tisValid: ${isValid}`);
-		isValid && updateExpression(expressionIndex, expressionPartIndex, e.target.value);
-	}
+    function handleClick_EditPiece(index) {
+        const newEquation = new IEquation(equation.pieces, equation.name)
+        newEquation.pieces[index].isEditMode = !newEquation.pieces[index].isEditMode;
+        setEquation(newEquation)
+    }
 
-	/**
-	 * Handles the change of an Operator via an onChange()
-	 * @param {Operator} part The Operator being updated
-	 * @param {number} expressionIndex Index for the expression that's in the equation rendered by this component
-	 * @param {number} expressionPartIndex Index for the part inside the expression mentioned in expressionIndex
-	 * @param {Event} e Event passed from the onChange
-	 */
-	function handleOperatorChange(part, expressionIndex, expressionPartIndex, e) {
-		const isValid = validateNewValue(part.type, e.target.value);
-		console.log(`handleOperatorChange(\n\tpart: ${JSON.stringify(part)}, \n\tkey: ${expressionPartIndex}, \n\te.value: ${e.target.value})\n\tisValid: ${isValid}`);
-		isValid && updateExpression(expressionIndex, expressionPartIndex, e.target.value);
-	}
+    function handleChange_PieceValue(e, index) {
+        const newEquation = new IEquation(equation.pieces, equation.name)
+        newEquation.pieces[index].value = e.target.value;
+        setEquation(newEquation)
+    }
 
-	/**
-	 * Handles adding a new Operand opbject to the Equation
-	 */
-	function handleAddNumber() {
-		addToEquation(new Operand(0, 'name'))
-	}
+    function handleChange_PieceName(e, index) {
+        const newEquation = new IEquation(equation.pieces, equation.name)
+        newEquation.pieces[index].name = e.target.value;
+        setEquation(newEquation)
+    }
 
-	//
-	// "RENDER" FUNCTIONS - functions that return HTML
-	//
+    function handleChange_selectPieceTypeToAdd(e) {
+        console.log('handleChange_selectPieceTypeToAdd: e.target.value: ', e.target.value);
+        setAddPieceType(e.target.value.toUpperCase())
+    }
 
-	/**
-	 * Renders an Operator or Operand in Edit mode
-	 * @param {Operator | Operand} part
-	 * @param {number} expressionIndex Index of the expression in the equation.expressions[index]
-	 * @param {number} expressionPartIndex Index of the part in expression.parts[index]
-	 * @returns {React.JSX.Element} Component for editing the respective data
-	 */
-	function renderPart_edit(part, expressionIndex, expressionPartIndex) {
-		return (
-			<>
-				{
-					part.type === TYPES.OPERATOR ?
-						(
-							<select
-								name="operators"
-								id="operators"
-								defaultValue={part.value}
-								onChange={e => handleOperatorChange(part, expressionIndex, expressionPartIndex, e)}
-							>
-								<option>+</option>
-								<option>-</option>
-								<option>*</option>
-								<option>/</option>
-							</select>
-						) :
-						(
-							<>
-								<label
-									htmlFor={`${part.name}-${expressionPartIndex}`}
-								>{part.name}</label>
-								<input
-									type='number'
-									defaultValue={part.value}
-									onChange={e => handleOperandChange(part, expressionIndex, expressionPartIndex, e)}
-									id={`${part.name}-${expressionPartIndex}`}
-								/>
-							</>
-						)
-				}
-			</>
-		)
-	}
+    function handleClick_AddPiece() {
+        console.log(`handleClick_AddPiece\n\tType: ${addPieceType}\n\tValue: ${newPieceValue}\n\tName: ${newPieceName}`);
+        let newPiece;
+        switch (addPieceType) {
+            case TYPES.CONSTANT:
+                newPiece = new Constant(+newPieceValue, newPieceName)
+                break;
+            case TYPES.VARIABLE:
+                try {
+                    newPiece = new Variable(+newPieceValue, newPieceName)
+                } catch (error) {
+                    console.error(`ERROR: handleClick_AddPiece -> ${addPieceType} -> ${error}`);
+                }
+                break;
+            case TYPES.OPERATOR:
+                if (newPieceValue === undefined || newPieceValue === null || newPieceValue === '') newPiece = new Operator('+')
+                else newPiece = new Operator(newPieceValue)
+                break;
 
-	/**
-	 * Renders an Operator or Operand in it's display (non-editing) state
-	 * @param {Operand | Operator} part Part to render
-	 * @returns {React.JSX.Element} HTML for viewing the part
-	 */
-	function renderPiecesForDisplay(equation) {
-		return (
-			<div className='display-pieces' id={'pieces_' + equation.name} key={'display_pieces_' + equation.name}>
-				{
-					equation.pieces.map((piece, index) => {
-						return (
-							<div className='piece' key={`pieces_${equation.name}_piece_${index}`}>
-								<div className={styles.name}>{piece.name}</div>
-								<div className={styles.value}>{piece.value}</div>
-							</div>
-						)
-					})
-				}
-			</div>
-		)
-	}
+            default:
+                return
+        }
 
-	/**
-	 * Renders HTML controls for editing the current Equation
-	 * @returns {React.JSX.Element}
-	 */
-	function renderEditControls() {
-		return (
-			<div className={styles.add_buttons_container}>
-				<h2>Add:</h2>
-				<button onClick={handleAddNumber}>Number</button>
-				<button>Operator</button>
-			</div>
-		)
-	}
+        console.log(newPiece);
+        equation.pieces.push(newPiece)
+        setEquation(new IEquation(equation.pieces, equation.name))
+    }
 
-	function renderablePieces() {
-		const components = [];
+    /**
+     * 
+     * @param {string} typeAsString 
+     */
+    function formatTypeCamelCase(typeAsString) {
+        const letters = typeAsString.toLowerCase().split('')
+        // getting first letter as CAPITALIZED
+        let result = letters.slice(0, 1)[0].toUpperCase()
+        // adding remaining letters as lowercase
+        for (let index = 1; index < letters.length; index++) {
+            result += letters[index];
+        }
+        return result
+    }
 
-		equation.pieces.forEach((p, index) => {
-			components.push(
-				<div className='equation-piece' data-piece-index={index}>
-					<div className='equation-piece-value'>{p.value}</div>
-					<div className='equation-piece-name'>{p.name === '' ? " " : p.name}</div>
-				</div>
-			)
-		})
+    function handleChange_title(e) {
+        setEquationTitle(e.target.value)
+    }
 
-		return components;
-	}
+    function handleClick_saveUpdatedEquation() {
+        handleClick_toggleEditMode()
+    }
 
-	/** Equation.jsx's return-statement */
-	return (
-		<div key={'eq_' + props.id} className={styles.main}>
+    function handleChange_variableValue(piece, event) {
+        const varVals = variableValues
+        varVals[piece.id] = event.target.value
+        setVariableValues(varVals)
+    }
+    console.log(equation.toString());
+    console.log('variableValues: ', variableValues);
 
-			{/* NON-EDIT DISPLAY */
-				// !isEditMode &&
-				renderPiecesForDisplay(equation)
-			}
+    function renderNamedPieces() {
 
-			<div className={styles.controls}>
-				{/* EQUATION CONTROLS */}
-				<div className={styles.main_buttons_container}>
-					<button onClick={handleToggleEditMode}>{isEditMode ? 'DONE' : 'EDIT'}</button>
-					<button onClick={() => handleRunEquation(equation)}>RUN</button>
-				</div>
+        return equation.pieces.map((piece, index) => {
+            if (piece.type === TYPES.VARIABLE) {
+                return (
+                    <>
+                        <label htmlFor={`var_${index}`}>{piece.name}</label>
+                        <input onChange={e => handleChange_variableValue(piece, e)} id={`var_${index}`} type="number" />
+                    </>
+                )
+            }
+        })
+    }
 
-				{/* EDIT CONTROLS */
-					isEditMode &&
-					<div className={styles.add_buttons_container}>
-						<h2>Add:</h2>
-						<button onClick={handleAddNumber}>Number</button>
-						<button>Operator</button>
-					</div>
-				}
-			</div>
+    function renderFontAwesomeIcon(iconName) {
 
-			{/* EDIT DISPLAY */
-				isEditMode &&
-				<DragDrop
-					id={props.id}
-					draggableContent={renderablePieces}
-					onDrop={updateExpression}
-				/>
-			}
-		</div>
-	)
+        let iconElement;
+
+        switch (iconName) {
+            case "ArrowLeft":
+                iconElement = <FaArrowLeft />
+                break;
+            // case "ArrowLeft":
+            //     iconElement = <FaArrowLeft />
+            //     break;
+            // case "ArrowLeft":
+            //     iconElement = <FaArrowLeft />
+            //     break;
+            default:
+                console.warn(`renderFontAwesomeIcon(${iconName}) -> invalid icon name passed in`);
+                break;
+        }
+
+        return (
+            <IconContext.Provider value={{ margin: auto }}>
+                <div>
+                    {iconElement}
+                </div>
+            </IconContext.Provider>
+        )
+    }
+
+    /** Equation.jsx's return-statement */
+    return (
+        <div className={styles.Equation}>
+
+            {/* LIST VIEW */}
+            <div className={styles.equation_listView}>
+                <h2 className={styles.title}>{equationTitle}</h2>
+                <p className={styles.equation_string}>{equation.piecesString}</p>
+                <button onClick={handleClick_toggleEditMode} className={styles.edit_button}>
+                    <MdEdit />
+                </button>
+                <button onClick={handleClick_runEquation} className={styles.run_button}>
+                    RUN <FaRunning />
+                </button>
+            </div>
+
+            { /* EDIT OVERLAY */
+                isEditMode &&
+                // div.equation_editView is the backdrop behind the modal,
+                <div className={styles.equation_editView}>
+                    {/* div.container is the modal */}
+                    <div className={styles.container}>
+
+                        {/* CANCEL BUTTON */}
+                        <button className={styles.back_button} onClick={handleClick_toggleEditMode}>
+                            {renderFontAwesomeIcon("ArrowLeft")}
+                        </button>
+
+                        {/* SAVE BUTTON */}
+                        <button className={styles.save_button} onClick={handleClick_saveUpdatedEquation}>
+                            <FaSave />
+                        </button>
+
+                        {/* UPDATE TITLE */}
+                        <div className={styles.new_title}>
+                            <label htmlFor={`title_${equation.id}`}>Name</label>
+                            <input
+                                onChange={e => handleChange_title(e)}
+                                placeholder={equationTitle}
+                                type="text"
+                                id={`title_${equation.id}`}
+                            />
+                        </div>
+
+                        {/* EQUATION STRING */}
+                        <p className={styles.equation_string}>
+                            {equation.piecesString}
+                        </p>
+
+                        {/* EDITABLE EQUATION - DRAG/DROP */}
+                        <EditableEquation
+                            id={props.id}
+                            equation={equation}
+                            handleChange_PieceValue={handleChange_PieceValue}
+                            handleChange_PieceName={handleChange_PieceName}
+                            handleClick_EditPiece={handleClick_EditPiece}
+                            updateExpression={updateExpression}
+                        />
+
+                        {/* CONTROLS */}
+                        <div className={styles.add_piece_container}>
+
+                            <h2>Add a New Piece</h2>
+
+                            {/* SELECT NEW PIECE TYPE */}
+                            <div className={styles.piece_selection}>
+                                <label htmlFor="">Piece Type </label>
+                                <select
+                                    name="piece-type"
+                                    id="piece-type"
+                                    className={styles.piece_type}
+                                    onChange={e => handleChange_selectPieceTypeToAdd(e)}
+                                >
+                                    <option>{formatTypeCamelCase(TYPES.CONSTANT)}</option>
+                                    <option>{formatTypeCamelCase(TYPES.VARIABLE)}</option>
+                                    <option>{formatTypeCamelCase(TYPES.OPERATOR)}</option>
+                                    <option>{formatTypeCamelCase(TYPES.PARENTHESIS)}</option>
+                                </select>
+                            </div>
+
+                            {/* NEW PIECE FORM - DYNAMIC BASED ON THE TYPE CHOSEN ABOVE */}
+                            <div className={styles.new_piece_form}>
+
+                                { // TYPE: CONSTANT or VARIABLE
+                                    (addPieceType === TYPES.CONSTANT || addPieceType === TYPES.
+                                        VARIABLE) &&
+                                    <div className={styles.constant_and_variable_fields}>
+                                        <div className={styles.new_name}>
+                                            <label htmlFor='new-name'>Name</label>
+                                            <input onChange={e => setNewPieceName(e.target.value)} id=
+                                                {'new-name'} type='text' />
+                                        </div>
+                                        <div className={styles.new_value}>
+                                            <label htmlFor='new-value'>Value</label>
+                                            <input onChange={e => setNewPieceValue(e.target.value)} id=
+                                                {'new-value'} type='number' />
+                                        </div>
+                                    </div>
+                                }
+
+                                { // TYPE: OPERATOR
+                                    addPieceType === TYPES.OPERATOR &&
+                                    <div className={styles.operator_fields}>
+                                        <select
+                                            name="operators"
+                                            id="operators"
+                                            onChange={e => setNewPieceValue(e.target.value)}
+                                        >
+                                            <option>+</option>
+                                            <option>-</option>
+                                            <option>*</option>
+                                            <option>/</option>
+                                        </select>
+                                    </div>
+                                }
+                                <button onClick={handleClick_AddPiece}>Add</button>
+                            </div>
+                        </div>
+
+                        {/* RUN BUTTON */}
+                        <button
+                            onClick={handleClick_runEquation}
+                            className={styles.run_button}
+                        > RUN <FaRunning />
+                        </button>
+
+                        {/* END OF className=styles.container */}
+                    </div>
+
+                    {/* END OF className=equation_editView */}
+                </div>
+            }
+
+            { /* RUN MODAL */
+                isRunMode &&
+                <div className={styles.run_modal}>
+                    <button onClick={() => setIsRunMode(false)}><FaArrowLeft /></button>
+
+                    {
+                        <p>{equation.piecesString} = <span className={styles.solution}>{solution}</span></p>
+                    }
+                    {
+                        equation.hasNamedPiece &&
+                        renderNamedPieces()
+                    }
+                    <button onClick={handleClick_solveEquation} className={styles.solve}>Solve</button>
+                </div>
+            }
+
+            {/* END OF className=styles.Equation */}
+        </div>
+    )
 }

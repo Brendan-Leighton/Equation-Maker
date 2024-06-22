@@ -2,6 +2,7 @@
 import { useState } from 'react'
 // STYLES
 import './App.css'
+import styles from './App.module.css'
 // COMPONENTS
 import DragDrop from './components/DragDrop/DragDrop';
 // INTERFACES
@@ -12,68 +13,48 @@ import Equation from './components/Equation/Equation';
 
 function App() {
 
-	//
-	// STATE
-	//
+    //
+    // STATE
+    //
 
-	/** Holds all equations that have been created */
-	const [equations, setEquations] = useState(TestData)
+    /** Holds all equations that have been created */
+    const [equations, setEquations] = useState(TestData)
 
-	/**
-	 * Handles adding a new Equation object to the equations state
-	 */
-	const handleAddNewEquation = () => {
-		console.log('handleAddNewEquation() -> fired');
-		const num1 = document.getElementById('num1').value;
-		const num2 = document.getElementById('num2').value;
+    function handleClick_AddNewEquation() {
+        setEquations([new IEquation([], 'equations name'), ...equations])
+    }
 
-		console.log(`num1: ${num1}, num2: ${num2}`);
+    // console.log('TestData: ', TestData);
+    // console.log('equations: ', equations);
 
-		setEquations(e => [...e, new IEquation([num1, '+', num2])])
-	}
+    /** App.jsx's return statement */
+    return (
+        <div className={styles.App}>
+            {/* Equations Controls */}
+            <div className={styles.equations_controls}>
+                <button onClick={handleClick_AddNewEquation}>Add New Equation</button>
+            </div>
 
-	function handleDragStart(event) {
-		event.dataTransfer.clearData();
-		event.dataTransfer.setData('text', event.target.id)
-	}
+            <ul className={styles.equations}>
+                { /* List of equations */
+                    equations.map((eq, index) => {
+                        return (
+                            <li key={index}>
+                                <Equation
+                                    id={index}
+                                    equation={eq}
+                                />
+                            </li>
+                        )
+                    })
+                }
+            </ul>
 
-	function handleDragOver(event) {
-		event.preventDefault();
-
-	}
-
-	function handleDrop(event) {
-		event.preventDefault();
-		if (!event.target.droppable) return
-		const data = event.dataTransfer.getData('text');
-		event.target.appendChild(document.getElementById(data))
-	}
-
-	console.log('TestData: ', TestData);
-	console.log('equations: ', equations);
-
-	/** App.jsx's return statement */
-	return (
-		<>
-			{
-				equations.map((eq, index) => {
-					return (
-						<div key={index}>
-							<hr />
-							<Equation
-								id={index}
-								equation={eq}
-							/>
-						</div>
-					)
-				})
-			}
-
-			{/* <EquationList
+            {/* <EquationList
 				equations={equations}
 			/> */}
-		</>
-	)
+        </div>
+    )
 }
 
 export default App

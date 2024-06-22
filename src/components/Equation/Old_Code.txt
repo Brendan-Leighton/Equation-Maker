@@ -1,0 +1,102 @@
+ <div key={'eq_' + props.id} className={styles.Equation}>
+
+                <div className={styles.equation_title}>
+                    {isEditMode_equationTitle ?
+                        <input onChange={e => handleChange_title(e)} placeholder={equationTitle} type="text" />
+                        :
+                        <h2 className={styles.title}>{equationTitle}</h2>
+                    }
+                    {
+                        isEditMode_equationTitle ?
+                            <button onClick={() => handleClick_editEquationTitle(props.id)}>
+                                <FaSave />
+                            </button>
+                            :
+                            <button onClick={toggleIsEditMode_equationTitle}>
+                                <FaEdit />
+                            </button>
+                    }
+                </div>
+                {/* NON-EDIT DISPLAY */
+                    <div className='display-pieces' id={'pieces_' + equation.name} key={'display_pieces_' + equation.name}>
+                        <h2>{equationTitle}</h2>
+                        {/* Pieces */
+                            equation.pieces.map((piece, index) => {
+                                return (
+                                    <div className={styles.piece} key={`pieces_${equation.name}_piece_${index}`}>
+                                        <div className={styles.value} title={piece.name}>{piece.value}</div>
+                                    </div>
+                                )
+                            })
+                        }
+                    </div>
+                }
+
+                {/* CONTROLS */}
+                {/* <div className={styles.controls}> */}
+                    {/* EQUATION CONTROLS */}
+                    {/* <div className={styles.main_buttons_container}>
+                        <button onClick={handleClick_toggleEditMode}>{isEditMode ? 'DONE' : 'EDIT'}</button>
+                        <button onClick={() => handleClick_runEquation(equation)}>RUN</button>
+                    </div> */}
+
+                    {/* EDIT CONTROLS */
+                        // isEditMode &&
+                        // <div className={styles.add_piece_container}>
+                        //     <h2>Add a Piece:</h2>
+                        //     <select
+                        //         name="piece-type"
+                        //         id="piece-type"
+                        //         onChange={e => handleChange_selectPieceTypeToAdd(e)}
+                        //     >
+                        //         <option>{formatTypeCamelCase(TYPES.CONSTANT)}</option>
+                        //         <option>{formatTypeCamelCase(TYPES.VARIABLE)}</option>
+                        //         <option>{formatTypeCamelCase(TYPES.OPERATOR)}</option>
+                        //         <option>{formatTypeCamelCase(TYPES.PARENTHESIS)}</option>
+                        //     </select>
+                        //     <div className={styles.new_piece_form}>
+                        //         {
+                        //             (addPieceType === TYPES.CONSTANT || addPieceType === TYPES.VARIABLE) &&
+                        //             <>
+                        //                 <label htmlFor='new-name'>Name</label>
+                        //                 <input onChange={e => setNewPieceName(e.target.value)} id={'new-name'} type='text' />
+
+                        //                 <label htmlFor='new-value'>Value</label>
+                        //                 <input onChange={e => setNewPieceValue(e.target.value)} id={'new-value'} type='number' />
+                        //             </>
+                        //         }
+                        //         {
+                        //             addPieceType === TYPES.OPERATOR &&
+                        //             <>
+                        //                 <select
+                        //                     name="operators"
+                        //                     id="operators"
+                        //                     onChange={e => setNewPieceValue(e.target.value)}
+                        //                 >
+                        //                     <option>+</option>
+                        //                     <option>-</option>
+                        //                     <option>*</option>
+                        //                     <option>/</option>
+                        //                 </select>
+                        //             </>
+                        //         }
+                        //     </div>
+
+                        //     <button onClick={handleClick_AddPiece}>add</button>
+                        // </div>
+                    }
+                {/* </div> */}
+
+
+                {/* EDIT DISPLAY */
+                    // isEditMode &&
+                    // <EditableEquation
+                    //     id={props.id}
+                    //     equation={equation}
+                    //     handlePieceValueChange={handlePieceValueChange}
+                    //     handlePieceNameChange={handlePieceNameChange}
+                    //     handleEditPiece={handleEditPiece}
+                    //     updateExpression={updateExpression}
+                    // />
+                }
+            </div>
