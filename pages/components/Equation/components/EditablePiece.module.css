@@ -1,0 +1,9 @@
+.EditablePiece {
+    --font-size: 1rem;
+    --font-padding-topBottom: 4px;
+    height: 100%;
+
+    .equation_piece_name {
+        min-height: calc(var(--font-size) + (var(--font-padding-topBottom) * 2));
+    }
+}
