@@ -10,7 +10,7 @@
 -->
 <div align='center'>
     
-# Equation Saver
+# :heavy_minus_sign: :heavy_plus_sign: Equation Saver :heavy_multiplication_x: :heavy_division_sign:
 
 *Calculators are used to compute two values; equations compute many values.*
 
@@ -25,7 +25,6 @@
 -->
 ## About the Project
 
-<p>
 Save an equation to run it later quickly. Add values as Constants or Variables, select operators, use parentheses to control computation order, and easily edit with a  drag-and-drop interface.
 
 ### Example Scenario
@@ -47,8 +46,6 @@ Equation Saver will allow you to enter your hours, click a submit button, and gi
 Let's say, in the previous example, you wanted to account for taxes. We'll assume 30% will go to taxes.
 
   To figure 30% of the money earned in the pay period, we'll do: `(HoursWorked * 15 * 0.3)`. Then we take what we had before and subtract this 30%. `Paycheck = HoursWorked * 15 - (HoursWorked * 15 * 0.3)` For this equation, once you set it up, you only have to enter a value for the HoursWorked to calculate the next paycheck's amount. The simplicity of not having to enter this all into a calculator is what Equation Saver is intended for.
-  
-</p>
 
 <!-- 
 	Live Project or Demo
